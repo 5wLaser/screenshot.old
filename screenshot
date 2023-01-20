@@ -1,0 +1,44 @@
+#!/bin/sh
+
+	##Usage##
+# default behavior will take a full screenshot, copy to clipboard, and save to $foto.
+
+# adding "crop" will let you crop or select a window
+# "file" will remove clipboard saving
+# "clip" will remove file saving
+# "clip" followed by "file" just happens to equate to stdout, if you need that
+# "-o out.png" will save the image to "out.png"
+# "edit" will disregard all other args except "clip", and edit the most recent file in $out
+#
+# ex: "screenshot crop -o '/tmp/ball.png' file" will capture a crop and send it to '/tmp/ball.png' without saving to your clipboard.
+
+# change $fotoDir and $foto to change your default directory and filename
+
+fotoDir="$HOME/pics/screenshots"
+foto="$fotoDir/$(date +%Y%m%d"-"%H%M%S"-""$(($(date +%N | sed "s/^0*//g; s/\.0*/./g") / 1000000))").png"
+
+out="$foto"
+e=";"
+clipper='xclip -t "image/png" -selection clipboard'
+i=1
+for arg in "$@"; do
+	[ "$arg" = "-o" ] && eval "out="\$$(($i + 1))""
+	i=$(($i + 1))
+	[ "$arg" = "crop" ] && if ! select="$(hacksaw -f "-i %i -g %g")"; then exit; fi
+	[ "$arg" = "clip" ] && out="-" && e="|" && clip=true
+	[ "$arg" = "file" ] && e="#"
+	[ "$arg" = "edit" ] && edit=true
+done
+if [ $edit ]; then
+	cd "$fotoDir" || exit
+	recentPic=$(ls -t ./*.png ./*.jpg ./*.webp 2>/dev/null | head -n1)
+	newPic="$(echo "$recentPic" | sed 's/\(.*\)\..*/\1/')-c.$(echo "$recentPic" | sed 's/.*\.//')"
+	notify-send "Editing"
+	basicrop "$recentPic" "$newPic" # can be replaced with a better editor than basicrop. in fact, i recommend it. do it.
+	! [ -f "$newPic" ] && newPic="$recentPic" && overwritten=true
+	eval "$clipper '$newPic'"
+	! [ $overwritten ] && [ $clip ] && rm "$newPic"
+else
+	[ $clip ] && clipper="$clipper #"
+	eval "shotgun -f png $select $out $e $clipper $out"
+fi
