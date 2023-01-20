@@ -1,5 +1,4 @@
 #!/bin/sh
-
 	##Usage##
 # default behavior will take a full screenshot, copy to clipboard, and save to $foto.
 
@@ -12,7 +11,7 @@
 #
 # ex: "screenshot crop -o '/tmp/ball.png' file" will capture a crop and send it to '/tmp/ball.png' without saving to your clipboard.
 
-# change $fotoDir and $foto to change your default directory and filename
+# change $fotoDir and $foto to change your default directory and filename.
 
 fotoDir="$HOME/pics/screenshots"
 foto="$fotoDir/$(date +%Y%m%d"-"%H%M%S"-""$(($(date +%N | sed "s/^0*//g; s/\.0*/./g") / 1000000))").png"
@@ -34,7 +33,7 @@ if [ $edit ]; then
 	recentPic=$(ls -t ./*.png ./*.jpg ./*.webp 2>/dev/null | head -n1)
 	newPic="$(echo "$recentPic" | sed 's/\(.*\)\..*/\1/')-c.$(echo "$recentPic" | sed 's/.*\.//')"
 	notify-send "Editing"
-	basicrop "$recentPic" "$newPic" # can be replaced with a better editor than basicrop. in fact, i recommend it. do it.
+	basicrop "$recentPic" "$newPic" # could be replaced with a better editor than basicrop. If the editor doesn't accept an output file, ignore the logic below this.
 	! [ -f "$newPic" ] && newPic="$recentPic" && overwritten=true
 	eval "$clipper '$newPic'"
 	! [ $overwritten ] && [ $clip ] && rm "$newPic"
